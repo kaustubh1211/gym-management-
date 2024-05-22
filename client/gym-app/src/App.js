@@ -1,12 +1,18 @@
-
-import './App.css';
-
+import "./App.css";
+import Login from "./component/Login";
+import Signin from "./component/Signin";
+import { BrowserRouter as Router } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 function App() {
   return (
-    <div >
-
-       <h1 className=" text-cyan-800 bg-black text-center h-screen w-screen   ">Gym bhai ka App</h1>
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signin />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
