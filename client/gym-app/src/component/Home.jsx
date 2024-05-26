@@ -25,11 +25,12 @@ const CheckIn = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   //machine check
   const handleMachineUsage = async () => {
     if (!user || !machineId) return;
+    
     setLoading(true);
     try {
       await addDoc(collection(db, 'machineUsage'), {
