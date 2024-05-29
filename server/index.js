@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
 
   socket.on('checkIn', async (data) => {
     try {
-      await db.collection('checkIns').add({
+      await db.collection('checkIns').add({   
         userId: data.userId,
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });

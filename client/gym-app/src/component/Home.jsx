@@ -5,10 +5,36 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firbase";
 
+import  { useEffect } from 'react';
+import io from 'socket.io-client';
+
+
+const socket = io('http://localhost:5001');
+
 const CheckIn = () => {
   const [user] = useAuthState(auth);
   const [loading, setLoading] = useState(false);
   const [machineId, setMachineId]=useState('')
+
+  //update 
+  const [gymTraffic, setGymTraffic] = useState(0);
+  const [machineUsage, setMachineUsage] = useState({});
+  console.log(gymTraffic);
+
+  useEffect(() => {
+    socket.on('gymTrafficUpdate', (count) => {
+      setGymTraffic(count);
+    });
+
+    socket.on('machineUsageUpdate', (usageData) => {
+      setMachineUsage(usageData);
+    });
+
+    return () => {
+      socket.off('gymTrafficUpdate');
+      socket.off('machineUsageUpdate');
+    };
+  }, []);
  
   const handleCheckIn = async () => {
     if (!user) return;
@@ -73,6 +99,21 @@ const CheckIn = () => {
         {loading ? 'Recording...' : 'Use Machine'}
       </button>
         </div>
+
+
+        {/* update the result  */}
+        <div className="GymApp">
+      <h1>Gym Management</h1>
+   
+      <h2>Current Gym Traffic: {gymTraffic}</h2>
+      <div>
+        {Object.keys(machineUsage).map((machine) => (
+          <div key={machine}>
+            {machine}: {machineUsage[machine]}
+          </div>
+        ))}
+      </div>
+    </div>
     </div>
 
 
