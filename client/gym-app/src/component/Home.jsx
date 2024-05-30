@@ -19,11 +19,12 @@ const CheckIn = () => {
   //update 
   const [gymTraffic, setGymTraffic] = useState(0);
   const [machineUsage, setMachineUsage] = useState({});
-  console.log(gymTraffic);
+ 
 
   useEffect(() => {
     socket.on('gymTrafficUpdate', (count) => {
       setGymTraffic(count);
+      
     });
 
     socket.on('machineUsageUpdate', (usageData) => {
@@ -50,6 +51,7 @@ const CheckIn = () => {
       alert("Check-in failed");
     } finally {
       setLoading(false);
+      
     }
   }; 
 

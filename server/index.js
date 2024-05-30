@@ -35,11 +35,13 @@ io.on('connection', (socket) => {
       });
 
       const countSnapshot = await db.collection('checkIns').get();
+      console.log("count:"+countSnapshot);
       const count = countSnapshot.size;
       io.emit('gymTrafficUpdate', count);
     } catch (error) {
       console.error('Error adding check-in: ', error);
     }
+    
   });
 
   socket.on('machineUsage', async (data) => {
