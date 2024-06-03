@@ -76,7 +76,7 @@ const CheckIn = () => {
   };
 
   return (
-    <div className=" g-6 flex h-full flex-col items-center justify-center ">
+    <div className=" g-6 flex h-full flex-col items-center justify-center  bg-slate-700  text-white ">
       <div className="flex mt-12">
 
       <button
@@ -85,7 +85,7 @@ const CheckIn = () => {
         className="inline-block rounded bg-primary px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
         >
         {loading ? "Checking In..." : "Check In"}
-      </button>
+      </button> 
   
         </div>
 
@@ -104,10 +104,10 @@ const CheckIn = () => {
 
 
         {/* update the result  */}
-        <div className="GymApp">
+        <div className="GymApp flex flex-col ">
       <h1>Gym Management</h1>
    
-      <h2>Current Gym Traffic: {gymTraffic}</h2>
+      <h2 className=" bg-slate-400">Current Gym Traffic: {gymTraffic}</h2>
       <div>
         {Object.keys(machineUsage).map((machine) => (
           <div key={machine}>
