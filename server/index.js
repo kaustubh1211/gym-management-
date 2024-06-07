@@ -44,6 +44,22 @@ io.on('connection', (socket) => {
     
   });
 
+
+  socket.on('checkOut', async (data) => {
+    try {
+      const userCheckInSnapshot = await db.collection('checkIns').where('userId', '==', data.userId).get();
+      userCheckInSnapshot.forEach(async (doc) => {
+        await db.collection('checkIns').doc(doc.id).delete();
+      });
+
+      const countSnapshot = await db.collection('checkIns').get();
+      const count = countSnapshot.size;
+      io.emit('gymTrafficUpdate', count); // Emit the updated count
+    } catch (error) {
+      console.error('Error during check-out: ', error);
+    }
+  });
+
   socket.on('machineUsage', async (data) => {
     try {
       await db.collection('machineUsage').add({
