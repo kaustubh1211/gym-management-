@@ -27,17 +27,34 @@ app.use(express.json());
 io.on('connection', (socket) => {
   console.log('New client connected');
 
+  // fetch intial data 
+
+   const sendGymTrafficUpdate= async ()=>{
+    const countSnapshot = await db.collection('checkIns').get();
+    const count = countSnapshot.size;
+    io.emit('gymTrafficUpdate', count);
+   }
+   sendGymTrafficUpdate();
+
   socket.on('checkIn', async (data) => {
     try {
+      const userCheckInSnapshot = await db.collection('checkIns').where('userId', '==', data.userId).get();
+      if (!userCheckInSnapshot.empty) {
+        socket.emit('checkInError', { message: 'User already checked in' });
+        return;
+      }
+
       await db.collection('checkIns').add({   
         userId: data.userId,
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
 
       const countSnapshot = await db.collection('checkIns').get();
-      console.log("count:"+countSnapshot);
       const count = countSnapshot.size;
+      console.log(count);
       io.emit('gymTrafficUpdate', count);
+
+      await sendGymTrafficUpdate();
     } catch (error) {
       console.error('Error adding check-in: ', error);
     }
@@ -55,10 +72,11 @@ io.on('connection', (socket) => {
       const countSnapshot = await db.collection('checkIns').get();
       const count = countSnapshot.size;
       io.emit('gymTrafficUpdate', count); // Emit the updated count
+      await sendGymTrafficUpdate();
     } catch (error) {
       console.error('Error during check-out: ', error);
     }
-  });
+  }); 
 
   socket.on('machineUsage', async (data) => {
     try {
