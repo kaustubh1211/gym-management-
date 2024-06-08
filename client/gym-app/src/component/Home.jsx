@@ -45,10 +45,11 @@ const CheckIn = () => {
   // check out 
   const handleCheckOut = () => {
     if (!user) return;
-
+    setLoading(true);
     socket.emit('checkOut', { userId: user.uid });
+    setLoading(false);
   };
-  
+
   //machine check
   const handleMachineUsage = async () => {
     if (!user || !machineId) return;
@@ -89,12 +90,13 @@ const CheckIn = () => {
       </button>
     </div>
 
-    <div className="flex mt-9">
+    <div className="flex mt-9  ">
       <input
-        type="text"
+        type="number"
         placeholder="Enter Machine ID"
         value={machineId}
         onChange={(e) => setMachineId(e.target.value)}
+        className=" text-black"
       />
       <button onClick={handleMachineUsage} disabled={loading}>
         {loading ? 'Recording...' : 'Use Machine'}
