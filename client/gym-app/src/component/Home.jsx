@@ -12,24 +12,17 @@ const socket = io("http://localhost:5001");
 const CheckIn = () => {
   const [user] = useAuthState(auth);
   const [loading, setLoading] = useState(false);
-  const [machineId, setMachineId] = useState("");
 
   //update
   const [gymTraffic, setGymTraffic] = useState(0);
-  const [machineUsage, setMachineUsage] = useState({});
 
   useEffect(() => {
     socket.on("gymTrafficUpdate", (count) => {
       setGymTraffic(count);
     });
 
-    socket.on("machineUsageUpdate", (usageData) => {
-      setMachineUsage(usageData);
-    });
-
     return () => {
       socket.off("gymTrafficUpdate");
-      socket.off("machineUsageUpdate");
     };
   }, []);
   const handleCheckIn = () => {
@@ -45,19 +38,9 @@ const CheckIn = () => {
     socket.emit("checkOut", { userId: user.uid });
   };
 
-  //machine check
-  const handleMachineUsage = async () => {
-    if (!user || !machineId) return;
-
-    socket.emit("machineUsage", {
-      machineId,
-      userId: user.uid,
-    });
-  };
-
   return (
     <div className=" g-6 flex h-full flex-col items-center justify-center bg-slate-700 text-white ">
-        <p className="flex-col">Are you in/leave gym</p>
+      <p className="flex-col">Are you in/leave gym</p>
       <div className="flex mt-12">
         <button
           onClick={handleCheckIn}
@@ -76,31 +59,11 @@ const CheckIn = () => {
         </button>
       </div>
 
-      <div className="flex mt-9  ">
-        <input
-          type="number"
-          placeholder="Enter Machine ID"
-          value={machineId}
-          onChange={(e) => setMachineId(e.target.value)}
-          className=" text-black"
-        />
-        <button onClick={handleMachineUsage} disabled={loading}>
-          {loading ? "Recording..." : "Use Machine"}
-        </button>
-      </div>
-
       <div className="GymApp flex flex-col ">
         <h1>Gym Management</h1>
         <h2 className=" bg-slate-400">
           Current Gym Traffic: {loading ? "......." : gymTraffic}
         </h2>
-        <div>
-          {Object.keys(machineUsage).map((machine) => (
-            <div key={machine}>
-              {machine}: {machineUsage[machine]}
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
