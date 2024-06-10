@@ -4,15 +4,20 @@ import Login from "./component/Login";
 import Signin from "./component/Signin";
 import { BrowserRouter as Router } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./component/Navbar";
 function App() {
+
+  
   return (
     <Router>
       <div>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signin />} />
-          <Route path="/Home" element={<Home/>} />
+
+          <Route path="/Home" element={<Home/>} />  
         </Routes>
+          
       </div>
     </Router>
   );

@@ -36,6 +36,13 @@ io.on('connection', (socket) => {
    }
    sendGymTrafficUpdate();
 
+   const sendMachineTrafficUpdate = async () => {
+    const countSnapshot = await db.collection('machineUsage').get();
+    const count = countSnapshot.size;
+    io.emit('machineUsageUpdate', count);
+   }
+    sendMachineTrafficUpdate();
+    
   socket.on('checkIn', async (data) => {
     try {
       const userCheckInSnapshot = await db.collection('checkIns').where('userId', '==', data.userId).get();
@@ -80,6 +87,7 @@ io.on('connection', (socket) => {
 
   socket.on('machineUsage', async (data) => {
     try {
+      
       await db.collection('machineUsage').add({
         machineId: data.machineId,
         userId: data.userId,
@@ -94,6 +102,7 @@ io.on('connection', (socket) => {
       });
 
       io.emit('machineUsageUpdate', usageData);
+      // await sendMachineTrafficUpdate();
     } catch (error) {
       console.error('Error adding machine usage: ', error);
     }
