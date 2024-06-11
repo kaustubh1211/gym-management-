@@ -37,7 +37,8 @@ export default function Machine() {
         });
       };
   return (
-    <div className=" g-6 flex h-full flex-col items-center justify-center bg-slate-700 text-white ">
+
+    <div className=" g-6 flex h-full flex-col items-center text-white justify-center bg-gradient-to-r from-gray-700 to-black ">
         <p className="flex-col">Are you in/leave gym</p>
      
 

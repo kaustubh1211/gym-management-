@@ -39,7 +39,7 @@ const CheckIn = () => {
   };
 
   return (
-    <div className=" g-6 flex h-full flex-col items-center justify-center bg-slate-700 text-white ">
+    <div className=" g-6 flex h-full flex-col items-center justify-center bg-gradient-to-r from-gray-700 to-black text-white ">
       <p className="flex-col">Are you in/leave gym</p>
       <div className="flex mt-12">
         <button
