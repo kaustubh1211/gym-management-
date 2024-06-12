@@ -39,33 +39,43 @@ const CheckIn = () => {
   };
 
   return (
-    <div className=" g-6 flex h-full flex-col items-center justify-center bg-gradient-to-r from-gray-700 to-black text-white ">
-      <p className="flex-col">Are you in/leave gym</p>
-      <div className="flex mt-12">
-        <button
-          onClick={handleCheckIn}
-          disabled={loading}
-          className="inline-block rounded bg-primary px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
-        >
-          {loading ? "Checking In..." : "Check In"}
-        </button>
-
-        <button
-          onClick={handleCheckOut}
-          disabled={loading}
-          className="inline-block rounded bg-primary px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
-        >
-          {loading ? "Checking Out..." : "Check Out"}
-        </button>
+    <section className="">
+      <div className="flex flex-col md:flex-row lg:gap-96 items-center justify-center bg-gradient-to-r from-gray-700 to-black text-white p-6">
+        <div className="text-center lg:text-left">
+          <p className="">Are you in/leave gym</p>
+          <div className="mt-12 flex flex-col lg:flex-row gap-4">
+            <button
+              onClick={handleCheckIn}
+              disabled={loading}
+              className="inline-block rounded bg-primary px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow transition duration-150 ease-in-out hover:bg-primary-600 focus:bg-primary-600 focus:outline-none active:bg-primary-700 dark:shadow dark:hover:shadow dark:focus:shadow dark:active:shadow"
+            >
+              {loading ? "Checking In..." : "Check In"}
+            </button>
+            <button
+              onClick={handleCheckOut}
+              disabled={loading}
+              className="inline-block rounded bg-primary px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow transition duration-150 ease-in-out hover:bg-primary-600 focus:bg-primary-600 focus:outline-none active:bg-primary-700 dark:shadow dark:hover:shadow dark:focus:shadow dark:active:shadow"
+            >
+              {loading ? "Checking Out..." : "Check Out"}
+            </button>
+          </div>
+          <div className="GymApp mt-6">
+            <h1 className="text-2xl font-bold">Gym Management</h1>
+            <h2 className="bg-slate-400 p-2 rounded mt-2">
+              Current Gym Traffic: {loading ? "......." : gymTraffic}
+            </h2>
+          </div>
+        </div>
+        <div className="mt-8 lg:mt-1">
+          <img
+            src="/GymTraffic/gym-management-app.jpg"
+            alt="Gym-traffic"
+            className="w-full max-w-xl h-auto lg:w-96 lg:h-72"
+           loading="lazy"
+          />
+        </div>
       </div>
-
-      <div className="GymApp flex flex-col ">
-        <h1>Gym Management</h1>
-        <h2 className=" bg-slate-400">
-          Current Gym Traffic: {loading ? "......." : gymTraffic}
-        </h2>
-      </div>
-    </div>
+    </section>
   );
 };
 
