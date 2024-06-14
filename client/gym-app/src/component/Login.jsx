@@ -14,7 +14,7 @@ export default function Login() {
       .then((userCredential) => {
         // Signed in
         const user = userCredential.user;
-        navigate("/Home");
+        navigate("/gymtraffic");
         console.log(user);
       })
       .catch((error) => {

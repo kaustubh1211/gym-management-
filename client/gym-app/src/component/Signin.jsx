@@ -31,7 +31,7 @@ export default function Signin() {
       const result = await signInWithGoogle();
       // Handle the result here (e.g., user info, token)
       console.log(result);
-      navigate("/Home");
+      navigate("/gymtraffic");
     } catch (error) {
       console.error("Error signing in with Google", error);
     }

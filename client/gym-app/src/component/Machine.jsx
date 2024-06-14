@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firbase";
-import io from "socket.io-client";
+import io from "socket.io-client";                                                                                                        
 
 const socket = io("http://localhost:5001");
 
@@ -11,25 +11,27 @@ export default function Machine() {
   const [machineUsage, setMachineUsage] = useState({});
 
   useEffect(() => {
-    socket.on("machineUsageUpdate", (usageData) => {
+    socket.on("machineTrafficUpdate", (usageData) => {
       setMachineUsage(usageData);
     });
 
     return () => {
-      socket.off("machineUsageUpdate");
+      socket.off("machineTrafficUpdate");
     };
   }, []);
 
   // Function to handle machine usage
   const handleMachineUsage = async (machineId) => {
     if (!user) return;
-
- 
-   
-      socket.emit("machineUsage", {
+    
+    try {socket.emit("machineUsage", {
         machineId,
         userId: user.uid,
       });
+    }
+    finally{
+      setLoading(false);
+    }
     
   };
 

@@ -36,12 +36,33 @@ io.on("connection", (socket) => {
   };
   sendGymTrafficUpdate();
 
-  const sendMachineTrafficUpdate = async () => {
-    const countSnapshot = await db.collection("machineUsage").get();
-    const count = countSnapshot.size;
-    io.emit("machineUsageUpdate", count);
-  };
-  sendMachineTrafficUpdate();
+  // app.get('/api/machine-usage', async () => {
+  //   try {
+  //     const usageSnapshot = await db.collection('machineUsage').get();
+  //     const usageData = {};
+  //     usageSnapshot.forEach((doc) => {
+  //       const { machineId } = doc.data();
+  //       usageData[machineId] = (usageData[machineId] || 0) + 1;
+  //     });
+  //     res.json(usageData);
+  //   } catch (error) {
+  //     console.error('Error fetching machine usage data:', error);
+  //     res.status(500).send('Internal Server Error');
+  //   }
+  // });
+ const sendMachineTrafficUpdate= async () => {
+      
+        const usageSnapshot = await db.collection('machineUsage').get();
+        const usageData = {};
+        usageSnapshot.forEach((doc) => {
+          const { machineId } = doc.data();
+          usageData[machineId] = (usageData[machineId] || 0) + 1;
+        });
+  
+        io.emit('machineTrafficUpdate',usageData);
+   
+    };
+sendMachineTrafficUpdate();
 
   socket.on("checkIn", async (data) => {
     try {
@@ -91,12 +112,13 @@ io.on("connection", (socket) => {
 
   socket.on("machineUsage", async (data) => {
     try {
-      const userCheckInSnapshot = await db
-        .collection("machineUsage")
-        .where("userId", "==", data.userId)
+      const userMachineSnapshot = await db.collection('machineUsage')
+        .where('userId', '==', data.userId)
+        .where('machineId', '==', data.machineId)
         .get();
-      if (!userCheckInSnapshot.empty) {
-        socket.emit("machineUsage", { message: "User already checked in" });
+
+      if (!userMachineSnapshot.empty) {
+        socket.emit('machineUsage', { message: 'User already checked in for this machine' });
         return;
       }
 
@@ -107,7 +129,7 @@ io.on("connection", (socket) => {
       });
 
       const usageSnapshot = await db.collection("machineUsage").get();
-      const usageData = {}; 
+      const usageData = {};
       usageSnapshot.forEach((doc) => {
         const { machineId } = doc.data();
         usageData[machineId] = (usageData[machineId] || 0) + 1;
@@ -115,37 +137,42 @@ io.on("connection", (socket) => {
 
       io.emit("machineUsageUpdate", usageData);
       // await sendMachineTrafficUpdate();
+      await sendMachineTrafficUpdate();
     } catch (error) {
       console.error("Error adding machine usage: ", error);
     }
   });
 
-  socket.on('deleteMachineUsage', async (data) => {
+  socket.on("deleteMachineUsage", async (data) => {
+   
     try {
-      const usageSnapshot = await db.collection('machineUsage')
-                                    .where('machineId', '==', data.machineId)
-                                    .where('userId', '==', data.userId)
-                                    .get();
-      if (!usageSnapshot.empty) {
-        usageSnapshot.forEach(async (doc) => {
+      const userMachineSnapshot = await db.collection('machineUsage')
+      .where('userId', '==', data.userId)
+      .where('machineId', '==', data.machineId)
+      .get();
+        if (userMachineSnapshot.empty) {
+          socket.emit('machineUsage', { message: 'User not checked in for this machine' });
+          return;
+        }
+  
+        userMachineSnapshot.forEach(async (doc) => {
           await db.collection('machineUsage').doc(doc.id).delete();
         });
-
-        const updatedUsageSnapshot = await db.collection('machineUsage').get();
+  
+        const usageSnapshot = await db.collection('machineUsage').get();
         const usageData = {};
-        updatedUsageSnapshot.forEach((doc) => {
+        usageSnapshot.forEach((doc) => {
           const { machineId } = doc.data();
           usageData[machineId] = (usageData[machineId] || 0) + 1;
         });
-
+  
         io.emit('machineUsageUpdate', usageData);
-      } else {
-        socket.emit('deleteMachineUsage', { message: 'No usage found for this user on this machine' });
+        await sendMachineTrafficUpdate();
+      } catch (error) {
+        console.error('Error deleting machine usage:', error);
       }
-    } catch (error) {
-      console.error('Error deleting machine usage: ', error);
-    }
-  });
+    });
+  
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
