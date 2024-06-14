@@ -40,10 +40,10 @@ const CheckIn = () => {
 
   return (
     <section className="">
-      <div className="flex flex-col md:flex-row lg:gap-96 items-center justify-center bg-gradient-to-r from-gray-700 to-black text-white p-6">
+      <div className="flex flex-col md:flex-row lg:gap-96 items-center h-screen justify-center bg-gradient-to-r from-gray-700 to-black text-white  ">
         <div className="text-center lg:text-left">
           <p className="">Are you in/leave gym</p>
-          <div className="mt-12 flex flex-col lg:flex-row gap-4">
+          <div className="mt-3 flex flex-col lg:flex-row gap-4">
             <button
               onClick={handleCheckIn}
               disabled={loading}
@@ -66,7 +66,7 @@ const CheckIn = () => {
             </h2>
           </div>
         </div>
-        <div className="mt-8 lg:mt-1">
+        <div className="mt-2 lg:mt-8">
           <img
             src="/GymTraffic/gym-management-app.jpg"
             alt="Gym-traffic"
