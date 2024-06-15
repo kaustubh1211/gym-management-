@@ -36,20 +36,7 @@ io.on("connection", (socket) => {
   };
   sendGymTrafficUpdate();
 
-  // app.get('/api/machine-usage', async () => {
-  //   try {
-  //     const usageSnapshot = await db.collection('machineUsage').get();
-  //     const usageData = {};
-  //     usageSnapshot.forEach((doc) => {
-  //       const { machineId } = doc.data();
-  //       usageData[machineId] = (usageData[machineId] || 0) + 1;
-  //     });
-  //     res.json(usageData);
-  //   } catch (error) {
-  //     console.error('Error fetching machine usage data:', error);
-  //     res.status(500).send('Internal Server Error');
-  //   }
-  // });
+
  const sendMachineTrafficUpdate= async () => {
       
         const usageSnapshot = await db.collection('machineUsage').get();

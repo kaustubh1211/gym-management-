@@ -40,6 +40,7 @@ const CheckIn = () => {
 
   return (
     <section className="">
+      
       <div className="flex flex-col md:flex-row lg:gap-96 items-center h-screen justify-center bg-gradient-to-r from-gray-700 to-black text-white  ">
         <div className="text-center lg:text-left">
           <p className="">Are you in/leave gym</p>
