@@ -46,12 +46,12 @@ export default function Machine() {
 
   // Fixed array of machines
   const machines = [
-    { id: 1, name: "Cable machine"  },
-    { id: 2, name: "Smith machine" },
-    { id: 3, name: "lat pull down" },
-    { id: 4, name: "Leg press" },
-    { id: 5, name: "Squat rack" },
-    {id :6 ,name:"treadmill" }
+    { id: 1, name: "Cable machine", img:" ./gym-machine/man-training-gym.jpg" },
+    { id: 2, name: "Smith machine",img:"./gym-machine/download-copy.png" },
+    { id: 3, name: "lat pull down", img:"./gym-machine/images.jpg"},
+    { id: 4, name: "Leg press",img:"./gym-machine/GLPH1100-LEG-PRESS_HACK-SQUAT-MACHINE.jpg" },
+    { id: 5, name: "Squat rack",img:"./gym-machine/bharat-fitness-squat-rack-gym-equipment-machine-for-legs-chest-work-out.jpg   " },
+    {id :6 ,name:"treadmill",img:"./gym-machine/download (1).jpg" }
   ];
 
   return (
@@ -64,16 +64,23 @@ export default function Machine() {
           {machines.map((machine) => (
             <div
               key={machine.id}
-              className="bg-gray-800 p-6 rounded-lg shadow-md text-center w-40"
+              className="bbg-gray-800 p-9  rounded-lg shadow-md text-center w-full max-w-xs mx-auto"
             >
+              <img
+                src={machine.img}
+                alt={machine.name}
+                className="w-full h-32 object-cover mb-4 rounded"
+              />
               <h3 className="text-xl font-semibold mb-2">{machine.name}</h3>
+             <div className=" gap-4">
+
               <button
                 onClick={() => handleMachineUsage(machine.id)}
                 disabled={loading}
-                className={`px-4 py-2 rounded ${
+                className={`px-1 py-2 rounded ${
                   loading ? "bg-gray-500" : "bg-blue-500 hover:bg-blue-700"
-                } text-white`}
-              >
+                  } text-white mb2`}
+                  >
                 {loading ? "Recording..." : "Use Machine"}
               </button>
 
@@ -82,10 +89,11 @@ export default function Machine() {
                 disabled={loading}
                 className={`px-4 py-2 rounded ${
                   loading ? "bg-gray-500" : "bg-blue-500 hover:bg-blue-700"
-                } text-white`}
-              >
+                  } text-white mb-2`}
+                  >
                 {loading ? "Deleting..." : "Delete usage"}
               </button>
+                </div>
               <div className="">Usage: {machineUsage[machine.id] || 0}</div>
             </div>
           ))}
