@@ -9,7 +9,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const serviceAccount = require("./gym-app-43f4f-firebase-adminsdk-zi5b8-b337376688.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-});
+}); 
 
 const db = getFirestore();
 const app = express();
@@ -26,9 +26,7 @@ app.use(express.json());
 
 io.on("connection", (socket) => {
   console.log("New client connected");
-
   // fetch intial data
-
   const sendGymTrafficUpdate = async () => {
     const countSnapshot = await db.collection("checkIns").get();
     const count = countSnapshot.size;
