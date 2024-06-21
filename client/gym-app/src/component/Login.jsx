@@ -4,16 +4,23 @@ import {  TERipple, TEInput } from "tw-elements-react";
 import { auth, signInWithGoogle } from "../firbase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Link,  useNavigate } from "react-router-dom";
-export default function Login() {
+
+
+
+export default function Login( {onLoginSuccess}) {
+
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
   const HandleLogin = (e) => {
-    e.preventDefault();
+    e.preventDefault(); 
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         // Signed in
         const user = userCredential.user;
+        onLoginSuccess();
         navigate("/gymtraffic");
         console.log(user);
       })
@@ -28,13 +35,14 @@ export default function Login() {
       const result = await signInWithGoogle();  
       // Handle the result here (e.g., user info, token)
       console.log(result);
+      onLoginSuccess();
       navigate("/gymtraffic");
     } catch (error) {
       console.error("Error signing in with Google", error);
     }
   };
   return (
-    <section className="h-screen">
+    <section className="h-screen bg-gradient-to-r from-slate-500 to-slate-800 text-white">
       <div className="h-full">
         {/* <!-- Left column container with background--> */}
         <div className="g-6 flex h-full flex-wrap items-center justify-center">
@@ -89,7 +97,7 @@ export default function Login() {
                 type="email"
                 label="Email address"
                 size="lg"
-                className="mb-6"
+                className="mb-6 text-white"
                 onChange={(e) => {
                   setEmail(e.target.value);
                 }}

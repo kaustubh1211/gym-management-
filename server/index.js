@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -6,10 +7,12 @@ const admin = require("firebase-admin");
 const { getFirestore } = require("firebase-admin/firestore");
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require("./gym-app-43f4f-firebase-adminsdk-zi5b8-b337376688.json");
+const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+
+firebaseConfig.private_key = firebaseConfig.private_key.replace(/\\n/g, '\n');
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-}); 
+  credential: admin.credential.cert(firebaseConfig),
+});
 
 const db = getFirestore();
 const app = express();
@@ -31,24 +34,28 @@ io.on("connection", (socket) => {
     const countSnapshot = await db.collection("checkIns").get();
     const count = countSnapshot.size;
     io.emit("gymTrafficUpdate", count);
+    console.log("Gym traffic update sent:", count);
   };
   sendGymTrafficUpdate();
 
+  const sendMachineTrafficUpdate = async () => {
+    const usageSnapshot = await db.collection("machineUsage").get();
+    const usageData = {};
+    usageSnapshot.forEach((doc) => {
+      const { machineId } = doc.data();
+      usageData[machineId] = (usageData[machineId] || 0) + 1;
+    });
 
- const sendMachineTrafficUpdate= async () => {
-      
-        const usageSnapshot = await db.collection('machineUsage').get();
-        const usageData = {};
-        usageSnapshot.forEach((doc) => {
-          const { machineId } = doc.data();
-          usageData[machineId] = (usageData[machineId] || 0) + 1;
-        });
-  
-        io.emit('machineTrafficUpdate',usageData);
-   
-    };
-sendMachineTrafficUpdate();
+    io.emit("machineTrafficUpdate", usageData);
+  };
+  sendMachineTrafficUpdate();
+  db.collection("checkIns").onSnapshot((snapshot) => {
+    sendGymTrafficUpdate();
+  });
 
+  db.collection("machineUsage").onSnapshot((snapshot) => {
+    sendMachineTrafficUpdate();
+  });
   socket.on("checkIn", async (data) => {
     try {
       const userCheckInSnapshot = await db
@@ -97,13 +104,16 @@ sendMachineTrafficUpdate();
 
   socket.on("machineUsage", async (data) => {
     try {
-      const userMachineSnapshot = await db.collection('machineUsage')
-        .where('userId', '==', data.userId)
-        .where('machineId', '==', data.machineId)
+      const userMachineSnapshot = await db
+        .collection("machineUsage")
+        .where("userId", "==", data.userId)
+        .where("machineId", "==", data.machineId)
         .get();
 
       if (!userMachineSnapshot.empty) {
-        socket.emit('machineUsage', { message: 'User already checked in for this machine' });
+        socket.emit("machineUsage", {
+          message: "User already checked in for this machine",
+        });
         return;
       }
 
@@ -121,7 +131,6 @@ sendMachineTrafficUpdate();
       });
 
       io.emit("machineUsageUpdate", usageData);
-      // await sendMachineTrafficUpdate();
       await sendMachineTrafficUpdate();
     } catch (error) {
       console.error("Error adding machine usage: ", error);
@@ -129,35 +138,36 @@ sendMachineTrafficUpdate();
   });
 
   socket.on("deleteMachineUsage", async (data) => {
-   
     try {
-      const userMachineSnapshot = await db.collection('machineUsage')
-      .where('userId', '==', data.userId)
-      .where('machineId', '==', data.machineId)
-      .get();
-        if (userMachineSnapshot.empty) {
-          socket.emit('machineUsage', { message: 'User not checked in for this machine' });
-          return;
-        }
-  
-        userMachineSnapshot.forEach(async (doc) => {
-          await db.collection('machineUsage').doc(doc.id).delete();
+      const userMachineSnapshot = await db
+        .collection("machineUsage")
+        .where("userId", "==", data.userId)
+        .where("machineId", "==", data.machineId)
+        .get();
+      if (userMachineSnapshot.empty) {
+        socket.emit("machineUsage", {
+          message: "User not checked in for this machine",
         });
-  
-        const usageSnapshot = await db.collection('machineUsage').get();
-        const usageData = {};
-        usageSnapshot.forEach((doc) => {
-          const { machineId } = doc.data();
-          usageData[machineId] = (usageData[machineId] || 0) + 1;
-        });
-  
-        io.emit('machineUsageUpdate', usageData);
-        await sendMachineTrafficUpdate();
-      } catch (error) {
-        console.error('Error deleting machine usage:', error);
+        return;
       }
-    });
-  
+
+      userMachineSnapshot.forEach(async (doc) => {
+        await db.collection("machineUsage").doc(doc.id).delete();
+      });
+
+      const usageSnapshot = await db.collection("machineUsage").get();
+      const usageData = {};
+      usageSnapshot.forEach((doc) => {
+        const { machineId } = doc.data();
+        usageData[machineId] = (usageData[machineId] || 0) + 1;
+      });
+
+      io.emit("machineUsageUpdate", usageData);
+      await sendMachineTrafficUpdate();
+    } catch (error) {
+      console.error("Error deleting machine usage:", error);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
