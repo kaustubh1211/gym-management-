@@ -66,7 +66,7 @@ export default function Machine() {
             className="bg-gray-800 p-6 rounded-lg shadow-lg transform transition duration-500 hover:scale-105"
           >
             <LazyLoadImage
-              src={machine.img}
+              src={machine.img} 
               alt={machine.name}
               className="w-full h-40 object-cover mb-4 rounded-t-lg"
               
