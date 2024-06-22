@@ -1,21 +1,17 @@
 import React from "react";
 import { useState } from "react";
-import {  TERipple, TEInput } from "tw-elements-react";
+import { TERipple, TEInput } from "tw-elements-react";
 import { auth, signInWithGoogle } from "../firbase";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { Link,  useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-
-
-export default function Login( {onLoginSuccess}) {
-
-  
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const HandleLogin = (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         // Signed in
@@ -25,14 +21,14 @@ export default function Login( {onLoginSuccess}) {
         console.log(user);
       })
       .catch((error) => {
-        const errorCode = error.code; 
+        const errorCode = error.code;
         const errorMessage = error.message;
         console.log(errorCode, errorMessage);
       });
   };
   const logGoogleUser = async () => {
     try {
-      const result = await signInWithGoogle();  
+      const result = await signInWithGoogle();
       // Handle the result here (e.g., user info, token)
       console.log(result);
       onLoginSuccess();
@@ -59,8 +55,6 @@ export default function Login( {onLoginSuccess}) {
             <form onClick={HandleLogin}>
               {/* <!--Sign in section--> */}
               <div className="flex flex-row items-center justify-center lg:justify-start">
-          
-
                 {/* <!-- Facebook button--> */}
                 <TERipple rippleColor="light">
                   <button
@@ -77,12 +71,6 @@ export default function Login( {onLoginSuccess}) {
                     {/* <!-- Facebook --> */}
                   </button>
                 </TERipple>
-
-       
-        
-
-          
-            
               </div>
 
               {/* <!-- Separator between social media sign in and email/password sign in --> */}

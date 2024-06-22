@@ -29,6 +29,32 @@ app.use(express.json());
 
 io.on("connection", (socket) => {
   console.log("New client connected");
+
+
+  // Listen for initial data request
+  socket.on('requestInitialData', async () => {
+    console.log('Initial data request received');
+
+    const sendGymTrafficUpdate = async () => {
+      const countSnapshot = await db.collection("checkIns").get();
+      const count = countSnapshot.size;
+      socket.emit("gymTrafficUpdate", count);
+    };
+    sendGymTrafficUpdate();
+
+    const sendMachineTrafficUpdate = async () => {
+      const usageSnapshot = await db.collection("machineUsage").get();
+      const usageData = {};
+      usageSnapshot.forEach((doc) => {
+        const { machineId } = doc.data();
+        usageData[machineId] = (usageData[machineId] || 0) + 1;
+      });
+      socket.emit("machineTrafficUpdate", usageData);
+    };
+    sendMachineTrafficUpdate();
+  });
+
+
   // fetch intial data
   const sendGymTrafficUpdate = async () => {
     const countSnapshot = await db.collection("checkIns").get();

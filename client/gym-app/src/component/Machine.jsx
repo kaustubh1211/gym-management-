@@ -16,6 +16,8 @@ export default function Machine() {
       setMachineUsage(usageData);
     });
 
+    socket.emit('requestInitialData');
+
     return () => {
       socket.off("machineTrafficUpdate");
     };
@@ -56,7 +58,7 @@ export default function Machine() {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gradient-to-r from-gray-700 to-black">
+    <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gradient-to-r from-gray-700 to-black ">
     <div className="flex flex-col mt-9">
       <h1 className="text-4xl font-bold mb-10 text-center">Choose Machine</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

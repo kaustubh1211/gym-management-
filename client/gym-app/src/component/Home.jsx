@@ -21,7 +21,7 @@ const CheckIn = () => {
     socket.on("gymTrafficUpdate", (count) => {
       setGymTraffic(count);
     });
-
+    socket.emit('requestInitialData');
     return () => {
       socket.off("gymTrafficUpdate");
     };
@@ -40,7 +40,7 @@ const CheckIn = () => {
   };
 
   return (
-    <section className="h-screen items-center justify-center bg-gradient-to-r from-gray-700 to-black" >
+    <section className="h-screen items-center justify-center bg-gradient-to-r from-gray-700 to-black " >
       
       <div className="flex flex-col md:flex-row lg:gap-96 items-center justify-center text-white pt-24  ">
         <div className="text-center lg:text-left">
