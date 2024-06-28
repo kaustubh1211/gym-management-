@@ -25,5 +25,5 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
 export  {db};  
-export const signInWithGoogle = () => signInWithPopup(auth, provider);
+  export const signInWithGoogle = () => signInWithPopup(auth, provider);
 export { auth };

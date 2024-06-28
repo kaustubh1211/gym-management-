@@ -19,7 +19,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3001",
     methods: ["GET", "POST"],
   },
 });
@@ -33,7 +33,6 @@ io.on("connection", (socket) => {
 
   // Listen for initial data request
   socket.on('requestInitialData', async () => {
-    console.log('Initial data request received');
 
     const sendGymTrafficUpdate = async () => {
       const countSnapshot = await db.collection("checkIns").get();
