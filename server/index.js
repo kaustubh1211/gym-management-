@@ -6,7 +6,7 @@ const socketIo = require("socket.io");
 const admin = require("firebase-admin");
 const { getFirestore } = require("firebase-admin/firestore");
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK  
 const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
 
 firebaseConfig.private_key = firebaseConfig.private_key.replace(/\\n/g, '\n');
@@ -17,11 +17,29 @@ admin.initializeApp({
 const db = getFirestore();
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "https://gym-management-client.vercel.app/",
-    methods: ["GET", "POST"],
+
+const allowedOrigins = ['https://gym-management-client.vercel.app'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
   },
+  credentials: true
+}));
+
+
+const io = require('socket.io')(server, {
+  cors: {
+    origin: 'https://gym-management-client.vercel.app',  // Without trailing slash
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
 });
 
 app.use(cors());

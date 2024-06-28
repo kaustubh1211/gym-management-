@@ -8,7 +8,9 @@ import { useEffect } from "react";
 import io from "socket.io-client";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
-const socket = io("https://gym-management-rho.vercel.app/");
+const socket = io("https://gym-management-rho.vercel.app", {
+  withCredentials: true
+});
 
 const CheckIn = () => {
   const [user] = useAuthState(auth);
