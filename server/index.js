@@ -33,10 +33,9 @@ app.use(cors({
   credentials: true
 }));
 
-
-const io = require('socket.io')(server, {
+const io = socketIo(server, {
   cors: {
-    origin: 'https://gym-management-client.vercel.app',  // Without trailing slash
+    origin: 'https://gym-management-client.vercel.app',
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -45,60 +44,40 @@ const io = require('socket.io')(server, {
 app.use(cors());
 app.use(express.json());
 
+const sendGymTrafficUpdate = async (socket) => {
+  const countSnapshot = await db.collection("checkIns").get();
+  const count = countSnapshot.size;
+  socket.emit("gymTrafficUpdate", count);
+  console.log("Gym traffic update sent:", count);
+};
+
+const sendMachineTrafficUpdate = async (socket) => {
+  const usageSnapshot = await db.collection("machineUsage").get();
+  const usageData = {};
+  usageSnapshot.forEach((doc) => {
+    const { machineId } = doc.data();
+    usageData[machineId] = (usageData[machineId] || 0) + 1;
+  });
+  socket.emit("machineTrafficUpdate", usageData);
+};
+
 io.on("connection", (socket) => {
   console.log("New client connected");
 
+  // Send initial data once connected
+  sendGymTrafficUpdate(socket);
+  sendMachineTrafficUpdate(socket);
 
-  // Listen for initial data request
-  socket.on('requestInitialData', async () => {
-
-    const sendGymTrafficUpdate = async () => {
-      const countSnapshot = await db.collection("checkIns").get();
-      const count = countSnapshot.size;
-      socket.emit("gymTrafficUpdate", count);
-    };
-    sendGymTrafficUpdate();
-
-    const sendMachineTrafficUpdate = async () => {
-      const usageSnapshot = await db.collection("machineUsage").get();
-      const usageData = {};
-      usageSnapshot.forEach((doc) => {
-        const { machineId } = doc.data();
-        usageData[machineId] = (usageData[machineId] || 0) + 1;
-      });
-      socket.emit("machineTrafficUpdate", usageData);
-    };
-    sendMachineTrafficUpdate();
+  // Listeners for data changes
+  db.collection("checkIns").onSnapshot(() => {
+    sendGymTrafficUpdate(socket);
   });
 
-
-  // fetch intial data
-  const sendGymTrafficUpdate = async () => {
-    const countSnapshot = await db.collection("checkIns").get();
-    const count = countSnapshot.size;
-    io.emit("gymTrafficUpdate", count);
-    console.log("Gym traffic update sent:", count);
-  };
-  sendGymTrafficUpdate();
-
-  const sendMachineTrafficUpdate = async () => {
-    const usageSnapshot = await db.collection("machineUsage").get();
-    const usageData = {};
-    usageSnapshot.forEach((doc) => {
-      const { machineId } = doc.data();
-      usageData[machineId] = (usageData[machineId] || 0) + 1;
-    });
-
-    io.emit("machineTrafficUpdate", usageData);
-  };
-  sendMachineTrafficUpdate();
-  db.collection("checkIns").onSnapshot((snapshot) => {
-    sendGymTrafficUpdate();
+  db.collection("machineUsage").onSnapshot(() => {
+    sendMachineTrafficUpdate(socket);
   });
 
-  db.collection("machineUsage").onSnapshot((snapshot) => {
-    sendMachineTrafficUpdate();
-  });
+  // Check-in logic
   socket.on("checkIn", async (data) => {
     try {
       const userCheckInSnapshot = await db
@@ -115,17 +94,13 @@ io.on("connection", (socket) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      const countSnapshot = await db.collection("checkIns").get();
-      const count = countSnapshot.size;
-      console.log(count);
-      io.emit("gymTrafficUpdate", count);
-
-      await sendGymTrafficUpdate();
+      sendGymTrafficUpdate(socket);
     } catch (error) {
       console.error("Error adding check-in: ", error);
     }
   });
 
+  // Check-out logic
   socket.on("checkOut", async (data) => {
     try {
       const userCheckInSnapshot = await db
@@ -136,15 +111,13 @@ io.on("connection", (socket) => {
         await db.collection("checkIns").doc(doc.id).delete();
       });
 
-      const countSnapshot = await db.collection("checkIns").get();
-      const count = countSnapshot.size;
-      io.emit("gymTrafficUpdate", count); // Emit the updated count
-      await sendGymTrafficUpdate();
+      sendGymTrafficUpdate(socket);
     } catch (error) {
       console.error("Error during check-out: ", error);
     }
   });
 
+  // Machine usage logic
   socket.on("machineUsage", async (data) => {
     try {
       const userMachineSnapshot = await db
@@ -166,20 +139,13 @@ io.on("connection", (socket) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      const usageSnapshot = await db.collection("machineUsage").get();
-      const usageData = {};
-      usageSnapshot.forEach((doc) => {
-        const { machineId } = doc.data();
-        usageData[machineId] = (usageData[machineId] || 0) + 1;
-      });
-
-      io.emit("machineUsageUpdate", usageData);
-      await sendMachineTrafficUpdate();
+      sendMachineTrafficUpdate(socket);
     } catch (error) {
       console.error("Error adding machine usage: ", error);
     }
   });
 
+  // Delete machine usage logic
   socket.on("deleteMachineUsage", async (data) => {
     try {
       const userMachineSnapshot = await db
@@ -198,15 +164,7 @@ io.on("connection", (socket) => {
         await db.collection("machineUsage").doc(doc.id).delete();
       });
 
-      const usageSnapshot = await db.collection("machineUsage").get();
-      const usageData = {};
-      usageSnapshot.forEach((doc) => {
-        const { machineId } = doc.data();
-        usageData[machineId] = (usageData[machineId] || 0) + 1;
-      });
-
-      io.emit("machineUsageUpdate", usageData);
-      await sendMachineTrafficUpdate();
+      sendMachineTrafficUpdate(socket);
     } catch (error) {
       console.error("Error deleting machine usage:", error);
     }
