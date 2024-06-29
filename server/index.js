@@ -50,15 +50,19 @@ let cachedMachineUsageData = null;
 
 // Fetch initial data and cache it
 const fetchInitialData = async () => {
-  const countSnapshot = await db.collection("checkIns").get();
-  cachedGymTrafficCount = countSnapshot.size;
+  try {
+    const countSnapshot = await db.collection("checkIns").limit(1000).get(); // Use limit to reduce read cost
+    cachedGymTrafficCount = countSnapshot.size;
 
-  const usageSnapshot = await db.collection("machineUsage").get();
-  cachedMachineUsageData = {};
-  usageSnapshot.forEach((doc) => {
-    const { machineId } = doc.data();
-    cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
-  });
+    const usageSnapshot = await db.collection("machineUsage").limit(1000).get();
+    cachedMachineUsageData = {};
+    usageSnapshot.forEach((doc) => {
+      const { machineId } = doc.data();
+      cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
+    });
+  } catch (error) {
+    console.error("Error fetching initial data:", error);
+  }
 };
 
 fetchInitialData(); // Call this once on server startup
@@ -87,28 +91,50 @@ io.on("connection", (socket) => {
   let gymTrafficDebounceTimeout = null;
   let machineTrafficDebounceTimeout = null;
 
+  // Throttle function to limit execution
+  const throttle = (func, limit) => {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    }
+  };
+
   // Listeners for data changes
-  db.collection("checkIns").onSnapshot((snapshot) => {
+  db.collection("checkIns").onSnapshot(throttle((snapshot) => {
     if (gymTrafficDebounceTimeout) clearTimeout(gymTrafficDebounceTimeout);
     gymTrafficDebounceTimeout = setTimeout(async () => {
-      const countSnapshot = await db.collection("checkIns").get();
-      cachedGymTrafficCount = countSnapshot.size;
-      io.emit("gymTrafficUpdate", cachedGymTrafficCount);
+      try {
+        const countSnapshot = await db.collection("checkIns").get();
+        cachedGymTrafficCount = countSnapshot.size;
+        io.emit("gymTrafficUpdate", cachedGymTrafficCount);
+      } catch (error) {
+        console.error("Error updating gym traffic:", error);
+      }
     }, 1000); // Adjust debounce time as needed
-  });
+  }, 2000)); // Adjust throttle time as needed
 
-  db.collection("machineUsage").onSnapshot((snapshot) => {
+  db.collection("machineUsage").onSnapshot(throttle((snapshot) => {
     if (machineTrafficDebounceTimeout) clearTimeout(machineTrafficDebounceTimeout);
     machineTrafficDebounceTimeout = setTimeout(async () => {
-      const usageSnapshot = await db.collection("machineUsage").get();
-      cachedMachineUsageData = {};
-      usageSnapshot.forEach((doc) => {
-        const { machineId } = doc.data();
-        cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
-      });
-      io.emit("machineTrafficUpdate", cachedMachineUsageData);
+      try {
+        const usageSnapshot = await db.collection("machineUsage").get();
+        cachedMachineUsageData = {};
+        usageSnapshot.forEach((doc) => {
+          const { machineId } = doc.data();
+          cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
+        });
+        io.emit("machineTrafficUpdate", cachedMachineUsageData);
+      } catch (error) {
+        console.error("Error updating machine traffic:", error);
+      }
     }, 1000); // Adjust debounce time as needed
-  });
+  }, 2000)); // Adjust throttle time as needed
 
   // Check-in logic
   socket.on("checkIn", async (data) => {
@@ -152,7 +178,7 @@ io.on("connection", (socket) => {
       io.emit("gymTrafficUpdate", cachedGymTrafficCount);
 
     } catch (error) {
-      console.error("Error during check-out: ", error);
+      console.error("Error during check-out:", error);
     }
   });
 
@@ -187,7 +213,7 @@ io.on("connection", (socket) => {
 
       io.emit("machineTrafficUpdate", cachedMachineUsageData);
     } catch (error) {
-      console.error("Error adding machine usage: ", error);
+      console.error("Error adding machine usage:", error);
     }
   });
 
