@@ -6,7 +6,7 @@ const socketIo = require("socket.io");
 const admin = require("firebase-admin");
 const { getFirestore } = require("firebase-admin/firestore");
 
-// Initialize Firebase Admin SDK  
+// Initialize Firebase Admin SDK
 const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
 
 firebaseConfig.private_key = firebaseConfig.private_key.replace(/\\n/g, '\n');
@@ -44,21 +44,36 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-const sendGymTrafficUpdate = async (socket) => {
-  const countSnapshot = await db.collection("checkIns").get();
-  const count = countSnapshot.size;
-  socket.emit("gymTrafficUpdate", count);
-  console.log("Gym traffic update sent:", count);
-};
+// Cache data to minimize reads
+let cachedGymTrafficCount = null;
+let cachedMachineUsageData = null;
 
-const sendMachineTrafficUpdate = async (socket) => {
+// Fetch initial data and cache it
+const fetchInitialData = async () => {
+  const countSnapshot = await db.collection("checkIns").get();
+  cachedGymTrafficCount = countSnapshot.size;
+
   const usageSnapshot = await db.collection("machineUsage").get();
-  const usageData = {};
+  cachedMachineUsageData = {};
   usageSnapshot.forEach((doc) => {
     const { machineId } = doc.data();
-    usageData[machineId] = (usageData[machineId] || 0) + 1;
+    cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
   });
-  socket.emit("machineTrafficUpdate", usageData);
+};
+
+fetchInitialData(); // Call this once on server startup
+
+const sendGymTrafficUpdate = (socket) => {
+  if (cachedGymTrafficCount !== null) {
+    socket.emit("gymTrafficUpdate", cachedGymTrafficCount);
+    console.log("Gym traffic update sent:", cachedGymTrafficCount);
+  }
+};
+
+const sendMachineTrafficUpdate = (socket) => {
+  if (cachedMachineUsageData !== null) {
+    socket.emit("machineTrafficUpdate", cachedMachineUsageData);
+  }
 };
 
 io.on("connection", (socket) => {
@@ -68,13 +83,31 @@ io.on("connection", (socket) => {
   sendGymTrafficUpdate(socket);
   sendMachineTrafficUpdate(socket);
 
+  // Debounce mechanism for real-time updates
+  let gymTrafficDebounceTimeout = null;
+  let machineTrafficDebounceTimeout = null;
+
   // Listeners for data changes
-  db.collection("checkIns").onSnapshot(() => {
-    sendGymTrafficUpdate(socket);
+  db.collection("checkIns").onSnapshot((snapshot) => {
+    if (gymTrafficDebounceTimeout) clearTimeout(gymTrafficDebounceTimeout);
+    gymTrafficDebounceTimeout = setTimeout(async () => {
+      const countSnapshot = await db.collection("checkIns").get();
+      cachedGymTrafficCount = countSnapshot.size;
+      io.emit("gymTrafficUpdate", cachedGymTrafficCount);
+    }, 1000); // Adjust debounce time as needed
   });
 
-  db.collection("machineUsage").onSnapshot(() => {
-    sendMachineTrafficUpdate(socket);
+  db.collection("machineUsage").onSnapshot((snapshot) => {
+    if (machineTrafficDebounceTimeout) clearTimeout(machineTrafficDebounceTimeout);
+    machineTrafficDebounceTimeout = setTimeout(async () => {
+      const usageSnapshot = await db.collection("machineUsage").get();
+      cachedMachineUsageData = {};
+      usageSnapshot.forEach((doc) => {
+        const { machineId } = doc.data();
+        cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
+      });
+      io.emit("machineTrafficUpdate", cachedMachineUsageData);
+    }, 1000); // Adjust debounce time as needed
   });
 
   // Check-in logic
@@ -94,7 +127,10 @@ io.on("connection", (socket) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      sendGymTrafficUpdate(socket);
+      const countSnapshot = await db.collection("checkIns").get();
+      cachedGymTrafficCount = countSnapshot.size;
+      io.emit("gymTrafficUpdate", cachedGymTrafficCount);
+
     } catch (error) {
       console.error("Error adding check-in: ", error);
     }
@@ -111,7 +147,10 @@ io.on("connection", (socket) => {
         await db.collection("checkIns").doc(doc.id).delete();
       });
 
-      sendGymTrafficUpdate(socket);
+      const countSnapshot = await db.collection("checkIns").get();
+      cachedGymTrafficCount = countSnapshot.size;
+      io.emit("gymTrafficUpdate", cachedGymTrafficCount);
+
     } catch (error) {
       console.error("Error during check-out: ", error);
     }
@@ -139,7 +178,14 @@ io.on("connection", (socket) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      sendMachineTrafficUpdate(socket);
+      const usageSnapshot = await db.collection("machineUsage").get();
+      cachedMachineUsageData = {};
+      usageSnapshot.forEach((doc) => {
+        const { machineId } = doc.data();
+        cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
+      });
+
+      io.emit("machineTrafficUpdate", cachedMachineUsageData);
     } catch (error) {
       console.error("Error adding machine usage: ", error);
     }
@@ -164,7 +210,14 @@ io.on("connection", (socket) => {
         await db.collection("machineUsage").doc(doc.id).delete();
       });
 
-      sendMachineTrafficUpdate(socket);
+      const usageSnapshot = await db.collection("machineUsage").get();
+      cachedMachineUsageData = {};
+      usageSnapshot.forEach((doc) => {
+        const { machineId } = doc.data();
+        cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
+      });
+
+      io.emit("machineTrafficUpdate", cachedMachineUsageData);
     } catch (error) {
       console.error("Error deleting machine usage:", error);
     }

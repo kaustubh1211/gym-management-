@@ -19,7 +19,7 @@ const CheckIn = () => {
   //update
   const [gymTraffic, setGymTraffic] = useState(0);
 
-  useEffect(() => {
+  useEffect(() => { 
     socket.on("gymTrafficUpdate", (count) => {
       setGymTraffic(count);
     });
