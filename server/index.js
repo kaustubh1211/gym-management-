@@ -18,7 +18,7 @@ const db = getFirestore();
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = ['https://gym-management-client.vercel.app'];
+const allowedOrigins = ['http://localhost:3001'];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -35,7 +35,7 @@ app.use(cors({
 
 const io = socketIo(server, {
   cors: {
-    origin: 'https://gym-management-client.vercel.app',
+    origin: 'http://localhost:3001',
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -50,19 +50,15 @@ let cachedMachineUsageData = null;
 
 // Fetch initial data and cache it
 const fetchInitialData = async () => {
-  try {
-    const countSnapshot = await db.collection("checkIns").limit(1000).get(); // Use limit to reduce read cost
-    cachedGymTrafficCount = countSnapshot.size;
+  const countSnapshot = await db.collection("checkIns").get();
+  cachedGymTrafficCount = countSnapshot.size;
 
-    const usageSnapshot = await db.collection("machineUsage").limit(1000).get();
-    cachedMachineUsageData = {};
-    usageSnapshot.forEach((doc) => {
-      const { machineId } = doc.data();
-      cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
-    });
-  } catch (error) {
-    console.error("Error fetching initial data:", error);
-  }
+  const usageSnapshot = await db.collection("machineUsage").get();
+  cachedMachineUsageData = {};
+  usageSnapshot.forEach((doc) => {
+    const { machineId } = doc.data();
+    cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
+  });
 };
 
 fetchInitialData(); // Call this once on server startup
@@ -84,57 +80,28 @@ io.on("connection", (socket) => {
   console.log("New client connected");
 
   // Send initial data once connected
-  sendGymTrafficUpdate(socket);
-  sendMachineTrafficUpdate(socket);
+  socket.on('requestInitialData', async () => {
+    console.log('Initial data request received');
 
-  // Debounce mechanism for real-time updates
-  let gymTrafficDebounceTimeout = null;
-  let machineTrafficDebounceTimeout = null;
+    const sendGymTrafficUpdate = async () => {
+      const countSnapshot = await db.collection("checkIns").get();
+      const count = countSnapshot.size;
+      socket.emit("gymTrafficUpdate", count);
+    };
+    sendGymTrafficUpdate();
 
-  // Throttle function to limit execution
-  const throttle = (func, limit) => {
-    let inThrottle;
-    return function() {
-      const args = arguments;
-      const context = this;
-      if (!inThrottle) {
-        func.apply(context, args);
-        inThrottle = true;
-        setTimeout(() => inThrottle = false, limit);
-      }
-    }
-  };
+    const sendMachineTrafficUpdate = async () => {
+      const usageSnapshot = await db.collection("machineUsage").get();
+      const usageData = {};
+      usageSnapshot.forEach((doc) => {
+        const { machineId } = doc.data();
+        usageData[machineId] = (usageData[machineId] || 0) + 1;
+      });
+      socket.emit("machineTrafficUpdate", usageData);
+    };
+    sendMachineTrafficUpdate();
+  });
 
-  // Listeners for data changes
-  db.collection("checkIns").onSnapshot(throttle((snapshot) => {
-    if (gymTrafficDebounceTimeout) clearTimeout(gymTrafficDebounceTimeout);
-    gymTrafficDebounceTimeout = setTimeout(async () => {
-      try {
-        const countSnapshot = await db.collection("checkIns").get();
-        cachedGymTrafficCount = countSnapshot.size;
-        io.emit("gymTrafficUpdate", cachedGymTrafficCount);
-      } catch (error) {
-        console.error("Error updating gym traffic:", error);
-      }
-    }, 1000); // Adjust debounce time as needed
-  }, 2000)); // Adjust throttle time as needed
-
-  db.collection("machineUsage").onSnapshot(throttle((snapshot) => {
-    if (machineTrafficDebounceTimeout) clearTimeout(machineTrafficDebounceTimeout);
-    machineTrafficDebounceTimeout = setTimeout(async () => {
-      try {
-        const usageSnapshot = await db.collection("machineUsage").get();
-        cachedMachineUsageData = {};
-        usageSnapshot.forEach((doc) => {
-          const { machineId } = doc.data();
-          cachedMachineUsageData[machineId] = (cachedMachineUsageData[machineId] || 0) + 1;
-        });
-        io.emit("machineTrafficUpdate", cachedMachineUsageData);
-      } catch (error) {
-        console.error("Error updating machine traffic:", error);
-      }
-    }, 1000); // Adjust debounce time as needed
-  }, 2000)); // Adjust throttle time as needed
 
   // Check-in logic
   socket.on("checkIn", async (data) => {
@@ -178,10 +145,10 @@ io.on("connection", (socket) => {
       io.emit("gymTrafficUpdate", cachedGymTrafficCount);
 
     } catch (error) {
-      console.error("Error during check-out:", error);
+      console.error("Error during check-out: ", error);
     }
   });
-
+ 
   // Machine usage logic
   socket.on("machineUsage", async (data) => {
     try {
@@ -213,7 +180,7 @@ io.on("connection", (socket) => {
 
       io.emit("machineTrafficUpdate", cachedMachineUsageData);
     } catch (error) {
-      console.error("Error adding machine usage:", error);
+      console.error("Error adding machine usage: ", error);
     }
   });
 

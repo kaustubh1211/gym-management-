@@ -4,7 +4,7 @@ import { auth } from "../firbase";
 import io from "socket.io-client";
 import { LazyLoadImage } from "react-lazy-load-image-component";                                                                                                    
 
-const socket = io("https://gym-management-rho.vercel.app", {
+const socket = io("http://localhost:5000", {
   withCredentials: true
 });
 

@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { TERipple, TEInput } from "tw-elements-react";
 import { auth, signInWithGoogle } from "../firbase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword , GoogleAuthProvider } from "firebase/auth";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Login({ onLoginSuccess }) {
