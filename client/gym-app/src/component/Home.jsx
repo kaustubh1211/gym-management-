@@ -30,8 +30,9 @@ const CheckIn = () => {
   }, []);
   const handleCheckIn = () => {
     if (!user) return;
-    
+    setLoading(true);
     socket.emit("checkIn", { userId: user.uid });
+    setLoading(false);
   };
 
   // check out
